@@ -1,11 +1,13 @@
 #!/usr/bin/env rust-script
 //! ```cargo
 //! [dependencies]
-//! sqlx = { version = "0.8", features = [ "runtime-async-std", "tls-native-tls", "postgres" ] }
+//! sqlx = { version = "0.8", features = [ "runtime-tokio", "uuid", "tls-native-tls", "postgres" ] }
 //! tokio = { version = "1", features = ["full"] }
 //! dotenvy = { version = "0.15.7"}
+//! uuid = { version = "1.18.1", features = [ "v4"] }
 //! ```
 use sqlx::postgres::PgPoolOptions;
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -93,6 +95,24 @@ async fn main() -> Result<(), sqlx::Error> {
     .await?;
 
     println!("All tables created succesfully!");
+
+    let usernames = vec![
+        "Ambient DJ",
+        "Club DJ",
+        "Jazz Head",
+        "Metal Head",
+        "Avant Garde Being",
+    ];
+
+    for username in usernames {
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO users (id, username) VALUES ($1, $2);")
+            .bind(id)
+            .bind(username)
+            .execute(&pool)
+            .await?;
+    }
 
     Ok(())
 }
