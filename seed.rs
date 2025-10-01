@@ -25,7 +25,11 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect(&database_url)
         .await?;
 
-    println!("DB Connection esablished.");
+    println!("Dropping tables..");
+
+    sqlx::query("DROP TABLE genre, set_events, tracks, users, users_genre")
+        .execute(&pool)
+        .await?;
 
     println!("Creating users table..");
 
@@ -88,7 +92,7 @@ async fn main() -> Result<(), sqlx::Error> {
     .execute(&pool)
     .await?;
 
-    println!("All tables succesfully!");
+    println!("All tables created succesfully!");
 
     Ok(())
 }
