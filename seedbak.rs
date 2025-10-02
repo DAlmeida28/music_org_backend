@@ -114,5 +114,39 @@ async fn main() -> Result<(), sqlx::Error> {
             .await?;
     }
 
+    println!("Test users created succesfully!");
+
+    let genres = vec![
+        "Drone",
+        "Minimal",
+        "Ambient",
+        "Jersey Club",
+        "Latin Club",
+        "Bounce",
+        "Brazillian Jazz",
+        "Japenese Jazz",
+        "Bebop",
+        "MetalCore",
+        "Death Metal",
+        "Black Metal",
+        "Classic Piano",
+        "Orchestra Performance",
+        "House",
+        "Techo",
+        "Field Recordings",
+    ];
+
+    for name in genres {
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO genre(id, name) VALUES ($1, $2);")
+            .bind(id)
+            .bind(name)
+            .execute(&pool)
+            .await?;
+    }
+
+    println!("Genre's created successfully!");
+
     Ok(())
 }
