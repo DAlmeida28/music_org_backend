@@ -148,5 +148,43 @@ async fn main() -> Result<(), sqlx::Error> {
 
     println!("Genre's created successfully!");
 
+    let user_genres_ambient = vec!["Ambient Garde", "Post-Club", "Dungeon Synth"];
+
+    let users_genres_avante = vec!["Alient Jazz", "Post Music"];
+
+    let ambientdj_id: Uuid = sqlx::query_scalar("SELECT id FROM users WHERE username = $1")
+        .bind("Ambient DJ")
+        .fetch_one(&pool)
+        .await?;
+
+    let avantegarde_id: Uuid = sqlx::query_scalar("SELECT id FROM users WHERE username = $1")
+        .bind("Avant Garde Being")
+        .fetch_one(&pool)
+        .await?;
+
+    for name in user_genres_ambient {
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO users_genre(id, name, users) VALUES ($1, $2, $3);")
+            .bind(id)
+            .bind(name)
+            .bind(ambientdj_id)
+            .execute(&pool)
+            .await?;
+    }
+
+    for name in users_genres_avante {
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO users_genre(id, name, users) VALUES($1, $2, $3);")
+            .bind(id)
+            .bind(name)
+            .bind(avantegarde_id)
+            .execute(&pool)
+            .await?;
+    }
+
+    println!("Users genres create succesffull!");
+
     Ok(())
 }
