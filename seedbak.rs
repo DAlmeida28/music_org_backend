@@ -1,11 +1,13 @@
 #!/usr/bin/env rust-script
 //! ```cargo
 //! [dependencies]
-//! sqlx = { version = "0.8", features = [ "runtime-tokio", "uuid", "tls-native-tls", "postgres" ] }
+//! sqlx = { version = "0.8", features = [ "runtime-tokio", "uuid", "tls-native-tls", "postgres", "chrono" ] }
 //! tokio = { version = "1", features = ["full"] }
 //! dotenvy = { version = "0.15.7"}
 //! uuid = { version = "1.18.1", features = [ "v4"] }
+//! chrono = { version = "0.4", features = ["serde"]}
 //! ```
+use chrono::NaiveDate;
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
 
@@ -73,7 +75,8 @@ async fn main() -> Result<(), sqlx::Error> {
         "CREATE TABLE set_events(
             id UUID NOT NULL UNIQUE,
             name VARCHAR(500) NOT NULL UNIQUE,
-            event_date DATE
+            event_date DATE,
+            users UUID NOT NULL REFERENCES users(id)
         );",
     )
     .execute(&pool)
@@ -185,6 +188,24 @@ async fn main() -> Result<(), sqlx::Error> {
     }
 
     println!("Users genres create succesffull!");
+
+    let events = vec!["Chill out", "Blowing Minds", "Intergalatic"];
+
+    let event_date = NaiveDate::from_ymd_opt(2026, 8, 24).unwrap();
+
+    for name in events {
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO set_events(id, name, event_date, users) VALUES($1, $2, $3, $4);")
+            .bind(id)
+            .bind(name)
+            .bind(event_date)
+            .bind(avantegarde_id)
+            .execute(&pool)
+            .await?;
+    }
+
+    println!("All set events created successfully");
 
     Ok(())
 }
