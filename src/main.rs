@@ -4,8 +4,8 @@ use sqlx::PgPool;
 use std::env;
 use std::error::Error;
 use std::net::SocketAddr;
-use uuid::Uuid;
 
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv()?;
 
