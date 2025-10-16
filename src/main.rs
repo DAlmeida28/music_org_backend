@@ -16,6 +16,12 @@ struct Genre {
     name: String,
 }
 
+#[derive(Serialize)]
+struct Sets {
+    id: String,
+    name: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenvy::dotenv()?;
@@ -32,6 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/genre", get(get_genre).post(get_genre))
+        .route("/sets", get(get_sets).post(get_sets))
         .layer(cors)
         .with_state(pool.clone());
 
@@ -43,6 +50,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+async fn get_sets(State(pool): State<PgPool>) -> impl IntoResponse {
+    match sqlx::query_as!(Sets, "Select id, name FROM set_events")
+        .fetch_all(&pool)
+        .await
+    {
+        Ok(sets) => Json(sets).into_response(),
+        Err(err_msg) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Database query failed: {}", err_msg),
+        )
+            .into_response(),
+    }
 }
 
 async fn get_genre(State(pool): State<PgPool>) -> impl IntoResponse {
