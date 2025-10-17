@@ -5,10 +5,11 @@ use axum::{
     response::IntoResponse,
     routing::get,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::{env, error::Error, net::SocketAddr};
 use tower_http::cors::CorsLayer;
+use uuid::Uuid;
 
 #[derive(Serialize)]
 struct Genre {
@@ -20,6 +21,14 @@ struct Genre {
 struct Sets {
     id: String,
     name: String,
+}
+
+#[derive(Deserialize)]
+struct CreateTrack {
+    track_name: String,
+    track_url: String,
+    track_genre: String,
+    set_events: String,
 }
 
 #[tokio::main]
@@ -50,6 +59,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+async fn create_track(Json(payload): Json<CreateTrack) -> impl IntoResponse {
+    let id = Uuid::new_v4();
+    
+    match sqlx::query("ISERT INTO tracks (id, track_name, track_url, track_genre, set_events ")
 }
 
 async fn get_sets(State(pool): State<PgPool>) -> impl IntoResponse {
