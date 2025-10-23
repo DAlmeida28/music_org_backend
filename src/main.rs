@@ -1,32 +1,12 @@
-use axum::{
-    Json, Router,
-    extract::State,
-    http::{Method, StatusCode},
-    response::IntoResponse,
-    routing::get,
-};
-use serde::{Deserialize, Serialize};
+use axum::{Router, http::Method, routing::get};
 use sqlx::PgPool;
 use std::{env, error::Error, net::SocketAddr};
 use tower_http::cors::CorsLayer;
-use uuid::Uuid;
 
+#[path = "db/genre.rs"]
+mod genre;
 #[path = "db/sets.rs"]
 mod sets;
-
-#[derive(Serialize)]
-struct Genre {
-    id: String,
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct CreateTrack {
-    track_name: String,
-    track_url: String,
-    track_genre: String,
-    set_events: String,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -43,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let pool = PgPool::connect(&database_url).await?;
 
     let app = Router::new()
-        .route("/genre", get(get_genre).post(get_genre))
+        .route("/genre", get(genre::get_genre).post(genre::get_genre))
         .route("/sets", get(sets::get_sets).post(sets::get_sets))
         .layer(cors)
         .with_state(pool.clone());
@@ -56,24 +36,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-//async fn create_track(Json(payload): Json<CreateTrack) -> impl IntoResponse {
-//    let id = Uuid::new_v4();
-//
-//    match sqlx::query("ISERT INTO tracks (id, track_name, track_url, track_genre, set_events ")
-//}
-
-async fn get_genre(State(pool): State<PgPool>) -> impl IntoResponse {
-    match sqlx::query_as!(Genre, "SELECT id, name FROM genre")
-        .fetch_all(&pool)
-        .await
-    {
-        Ok(genres) => Json(genres).into_response(),
-        Err(err_msg) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Database query failed: {}", err_msg),
-        )
-            .into_response(),
-    }
 }
