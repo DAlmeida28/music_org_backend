@@ -11,14 +11,11 @@ use std::{env, error::Error, net::SocketAddr};
 use tower_http::cors::CorsLayer;
 use uuid::Uuid;
 
-#[derive(Serialize)]
-struct Genre {
-    id: String,
-    name: String,
-}
+#[path = "db/sets.rs"]
+mod sets;
 
 #[derive(Serialize)]
-struct Sets {
+struct Genre {
     id: String,
     name: String,
 }
@@ -47,7 +44,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/genre", get(get_genre).post(get_genre))
-        .route("/sets", get(get_sets).post(get_sets))
+        .route("/sets", get(sets::get_sets).post(sets::get_sets))
         .layer(cors)
         .with_state(pool.clone());
 
@@ -61,25 +58,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn create_track(Json(payload): Json<CreateTrack) -> impl IntoResponse {
-    let id = Uuid::new_v4();
-    
-    match sqlx::query("ISERT INTO tracks (id, track_name, track_url, track_genre, set_events ")
-}
-
-async fn get_sets(State(pool): State<PgPool>) -> impl IntoResponse {
-    match sqlx::query_as!(Sets, "Select id, name FROM set_events")
-        .fetch_all(&pool)
-        .await
-    {
-        Ok(sets) => Json(sets).into_response(),
-        Err(err_msg) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Database query failed: {}", err_msg),
-        )
-            .into_response(),
-    }
-}
+//async fn create_track(Json(payload): Json<CreateTrack) -> impl IntoResponse {
+//    let id = Uuid::new_v4();
+//
+//    match sqlx::query("ISERT INTO tracks (id, track_name, track_url, track_genre, set_events ")
+//}
 
 async fn get_genre(State(pool): State<PgPool>) -> impl IntoResponse {
     match sqlx::query_as!(Genre, "SELECT id, name FROM genre")
